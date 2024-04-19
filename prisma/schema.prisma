@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum RefundTypeEnum {
+  POINT
+  BANK
+}
+
+enum OrderStatus {
+  UNPAID
+  PREPARED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  role      Role    @default(USER)
+  email     String? @unique
+  password  String
+  address   String?
+  firstName String  @map("first_name")
+  lastName  String  @map("last_name")
+  phone     String
+  Shipping_Address Shipping_Address[]
+  cart      Cart[]
+  
+}
+
+model Order {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  orderdate      DateTime
+  totalprice     Float
+  payment        String?
+  shipping       String?
+  shoeId         Int      @map("shoe_id")
+}
+model Shoe {
+  id            Int          @id @default(autoincrement())
+  name          String?
+  description   String?
+  price         Int
+  stock         String?
+  sizes         Sizes[]      @relation("ShoeSizes")
+  image         String?
+  Cart_product  Cart_product[]
+}
+
+model Sizes {
+  id       Int      @id @default(autoincrement())
+  size     String
+  shoes    Shoe[]   @relation("ShoeSizes")
+}
+
+
+model Orderitem {
+  id       Int @id @default(autoincrement())
+  orderId  Int
+  shoeId   Int
+  quantity Int
+}
+
+
+model Contact {
+    id        Int     @id @default(autoincrement())
+    firstName String  @map("first_name")
+    lastName  String  @map("last_name")
+    email     String?
+    message   String
+}
+
+model Shipping_Address {
+    id            Int     @id @default(autoincrement())
+    firstName     String  @map("first_name")
+    lastName      String  @map("last_name")
+    phone         String
+    email         String?
+    address       String
+    province      String
+    district      String
+    subDistrict   String  @map("sub_district")
+    isMainAddress Boolean @map("is_main_adderss")
+    user          User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    userId        Int     @map("user_id")
+}
+
+model Cart {
+    id           Int            @id @default(autoincrement())
+    total        Int            @default(0)
+    user         User           @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    userId       Int            @unique @map("user_id")
+    cart_product Cart_product[]
+}
+
+model Cart_product {
+    id       Int   @id @default(autoincrement())
+    quantity Int   @default(1)
+    shoe     Shoe @relation(fields: [shoeId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    shoeId  Int   @map("shoe_id")
+    cart     Cart  @relation(fields: [cartId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    cartId   Int   @map("cart_id")
+}
